@@ -146,12 +146,9 @@ export async function getIndustryInsights() {
       throw new Error("Unauthorized: Please sign in to access industry insights");
     }
 
-    // Get user data with industry insights
+    // Get user data
     const user = await db.user.findUnique({
       where: { clerkUserId: userId },
-      include: {
-        industryInsights: true,
-      },
     });
 
     if (!user) {
@@ -165,12 +162,17 @@ export async function getIndustryInsights() {
     const now = new Date();
     const UPDATE_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
+    // Get existing insights for this industry
+    let industryInsights = await db.industryInsight.findUnique({
+      where: { industry: user.industry },
+    });
+
     // Case 1: No insights exist - generate new ones
-    if (!user.industryInsights) {
+    if (!industryInsights) {
       console.log("No existing insights found. Generating new insights...");
       const insights = await generateAIInsights(user.industry);
 
-      const industryInsight = await db.industryInsight.create({
+      industryInsights = await db.industryInsight.create({
         data: {
           industry: user.industry,
           ...insights,
@@ -179,11 +181,11 @@ export async function getIndustryInsights() {
         },
       });
 
-      return industryInsight;
+      return industryInsights;
     }
 
     // Case 2: Insights exist but are outdated - refresh them
-    if (user.industryInsights.nextUpdate < now) {
+    if (industryInsights.nextUpdate < now) {
       console.log("Insights are outdated. Generating fresh insights...");
       const newInsights = await generateAIInsights(user.industry);
 
@@ -201,7 +203,7 @@ export async function getIndustryInsights() {
 
     // Case 3: Return existing valid insights
     console.log("Using existing valid insights");
-    return user.industryInsights;
+    return industryInsights;
 
   } catch (error) {
     console.error("Error in getIndustryInsights:", error);
