@@ -101,21 +101,23 @@ export async function getUserOnboardingStatus() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) throw new Error("User not found");
-
   try {
-    const user = await db.user.findUnique({
-      where: {
-        clerkUserId: userId,
-      },
-      select: {
-        industry: true,
-      },
+    let user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+      select: { industry: true },
     });
+
+    // If user doesn't exist, create them
+    if (!user) {
+      user = await db.user.create({
+        data: {
+          clerkUserId: userId,
+          email: (await auth()).sessionClaims?.email || "unknown@example.com",
+          name: (await auth()).sessionClaims?.name || "User",
+        },
+        select: { industry: true },
+      });
+    }
 
     return {
       isOnboarded: !!user?.industry,
