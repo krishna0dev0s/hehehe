@@ -11,12 +11,24 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 export async function saveResume(content) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
-    const user = await db.user.findUnique({
+    
+    let user = await db.user.findUnique({
         where: {
             clerkUserId: userId
         },
     });
-    if (!user) throw new Error("User not found");
+    
+    // Auto-create user if doesn't exist
+    if (!user) {
+        user = await db.user.create({
+            data: {
+                clerkUserId: userId,
+                email: (await auth()).sessionClaims?.email || "unknown@example.com",
+                name: (await auth()).sessionClaims?.name || "User",
+            },
+        });
+    }
+    
     try {
         const resume = await db.resume.upsert({
             where: {
@@ -42,11 +54,20 @@ export async function getResume() {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const user = await db.user.findUnique({
+    let user = await db.user.findUnique({
         where: { clerkUserId: userId },
     });
 
-    if (!user) throw new Error("User not found");
+    // Auto-create user if doesn't exist
+    if (!user) {
+        user = await db.user.create({
+            data: {
+                clerkUserId: userId,
+                email: (await auth()).sessionClaims?.email || "unknown@example.com",
+                name: (await auth()).sessionClaims?.name || "User",
+            },
+        });
+    }
 
     return await db.resume.findUnique({
         where: {
@@ -59,15 +80,26 @@ export async function improveWithAI({ current, type }) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const user = await db.user.findUnique({
+    let user = await db.user.findUnique({
         where: { clerkUserId: userId },
-        include: {
-            industryInsights: true,
-        },
     });
-    if (!user) throw new Error("User not found");
+    
+    // Auto-create user if doesn't exist
+    if (!user) {
+        user = await db.user.create({
+            data: {
+                clerkUserId: userId,
+                email: (await auth()).sessionClaims?.email || "unknown@example.com",
+                name: (await auth()).sessionClaims?.name || "User",
+            },
+        });
+    }
 
-    const industryInsights = user.industryInsights;
+    // Get industry insights separately
+    const industryInsights = user.industry ? await db.industryInsight.findUnique({
+        where: { industry: user.industry },
+    }) : null;
+
     const prompt = `
     As an expert resume writer, enhance the following ${type} description for a ${user.industry || 'technology'} professional to reflect current industry standards and 2025 hiring trends. 
     

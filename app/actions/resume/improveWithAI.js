@@ -11,13 +11,22 @@ export async function improveWithAI({ current, type }) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const user = await db.user.findUnique({
+    let user = await db.user.findUnique({
         where: { clerkUserId: userId },
-        include: {
-            industryInsight: true,
+        select: {
+            id: true,
+            industry: true,
         },
     });
-    if (!user) throw new Error("User not found");
+    if (!user) {
+        user = await db.user.create({
+            data: {
+                clerkUserId: userId,
+                email: (await auth()).sessionClaims?.email || "unknown@example.com",
+                name: (await auth()).sessionClaims?.name || "User",
+            },
+        });
+    }
 
     const prompt = `
     As an expert resume writer, enhance the following ${type} description for a ${user.industry} professional to reflect current industry standards and 2025 hiring trends. Make it more impactful, results-driven, and aligned with modern expectations.

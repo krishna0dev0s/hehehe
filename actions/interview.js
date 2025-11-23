@@ -11,7 +11,7 @@ export async function generateQuiz() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
     select: {
       industry: true,
@@ -19,7 +19,15 @@ export async function generateQuiz() {
     },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   const prompt = `
     Generate 10 technical interview questions for a ${
@@ -61,11 +69,19 @@ export async function saveQuizResult(questions, answers, score) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   const questionResults = questions.map((q, index) => ({
     question: q.question,
@@ -132,11 +148,19 @@ export async function getAssessments() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   try {
     const assessments = await db.assessment.findMany({
@@ -159,11 +183,19 @@ export async function saveInterviewAssessment(companyName, jobTitle, questions, 
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   try {
     const questionResults = questions.map((q, idx) => ({

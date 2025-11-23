@@ -9,11 +9,19 @@ export async function updateUser(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   try {
     console.log("Received data:", data); // Debug log

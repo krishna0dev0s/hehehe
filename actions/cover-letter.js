@@ -11,11 +11,19 @@ export async function generateCoverLetter(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   const prompt = `
     Write a professional cover letter for a ${data.jobTitle} position at ${
@@ -69,11 +77,19 @@ export async function getCoverLetters() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   return await db.coverLetter.findMany({
     where: {
@@ -89,11 +105,19 @@ export async function getCoverLetter(id) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   return await db.coverLetter.findUnique({
     where: {
@@ -107,11 +131,19 @@ export async function deleteCoverLetter(id) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
+    });
+  }
 
   return await db.coverLetter.delete({
     where: {
