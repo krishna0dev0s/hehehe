@@ -4,7 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function extractTextFromPDF(buffer) {
   try {
-    const pdfParse = (await import("pdf-parse/legacy/build/pdf.js")).default;
+    const pdfParse = (await import("pdf-parse")).default;
     const data = await pdfParse(buffer);
     return data.text;
   } catch (error) {
