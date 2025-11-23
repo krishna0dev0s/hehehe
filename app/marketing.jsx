@@ -174,7 +174,7 @@ export default function MarketingHome() {
               Frequently asked questions
             </h2>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-              Got questions? We've got answers. Explore our frequently asked questions to learn more.
+              Got questions? We&apos;ve got answers. Explore our frequently asked questions to learn more.
             </p>
           </div>
 

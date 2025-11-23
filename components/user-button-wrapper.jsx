@@ -10,7 +10,8 @@ export function UserButtonWrapper() {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
+  // Avoid hydration mismatch by only rendering on client
+  if (!typeof window !== 'undefined' || !mounted) {
     return <div className="w-10 h-10" />;
   }
 

@@ -120,7 +120,7 @@ export default function ResumeExtractor() {
                   <div>
                     <p className="text-lg font-semibold">Upload Your Resume</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      PDF, DOC, or DOCX (We'll extract all details and create a polished version)
+                      PDF, DOC, or DOCX (We&apos;ll extract all details and create a polished version)
                     </p>
                   </div>
                 </div>
