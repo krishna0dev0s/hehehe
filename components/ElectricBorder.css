@@ -1,0 +1,101 @@
+:root{
+  --electric-border-color:#5227FF;
+  --eb-border-width:2px;
+}
+
+.electric-border{
+  position:relative;
+  display:inline-block;
+  border-radius:inherit;
+  --electric-border-color: var(--electric-border-color);
+  --eb-border-width: var(--eb-border-width);
+  padding: calc(var(--eb-border-width) * 1.5);
+}
+
+/* invisible svg container used only for filters */
+.eb-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:1;
+  overflow:visible;
+}
+
+.eb-layers{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  border-radius:inherit;
+}
+
+/* the stroke element receives the svg filter via style.filter="url(#...)" */
+.eb-stroke{
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  box-sizing:border-box;
+  pointer-events:none;
+  /* create a hollow border using outline and transparent background */
+  background:transparent;
+  border-radius:inherit;
+  outline: var(--eb-border-width) solid var(--electric-border-color);
+  outline-offset: calc(var(--eb-border-width) * -1);
+  mix-blend-mode: screen;
+  filter: none;
+}
+
+/* soft animated glows */
+.eb-glow-1, .eb-glow-2, .eb-background-glow{
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  z-index:0;
+}
+
+.eb-glow-1{
+  background: radial-gradient(60% 40% at 10% 20%, rgba(82,39,255,0.18), transparent 15%),
+              radial-gradient(40% 30% at 80% 80%, rgba(34,211,238,0.08), transparent 25%);
+  filter: blur(8px) saturate(120%);
+  transform: translateZ(0);
+  animation: eb-move-1 8s linear infinite;
+}
+
+.eb-glow-2{
+  background: radial-gradient(50% 30% at 80% 10%, rgba(82,39,255,0.12), transparent 20%),
+              radial-gradient(30% 20% at 20% 80%, rgba(99,102,241,0.06), transparent 25%);
+  filter: blur(16px) saturate(120%);
+  animation: eb-move-2 10s linear infinite;
+}
+
+.eb-background-glow{
+  background: linear-gradient(180deg, rgba(82,39,255,0.02), rgba(34,211,238,0.01));
+  filter: blur(20px);
+}
+
+@keyframes eb-move-1{
+  0%{transform:translate(0px,0px) scale(1)}
+  50%{transform:translate(6px,-6px) scale(1.02)}
+  100%{transform:translate(0px,0px) scale(1)}
+}
+
+@keyframes eb-move-2{
+  0%{transform:translate(0px,0px) scale(1)}
+  50%{transform:translate(-6px,6px) scale(1.02)}
+  100%{transform:translate(0px,0px) scale(1)}
+}
+
+/* content sits above the decorative layers */
+.eb-content{
+  position:relative;
+  z-index:2;
+}
+
+/* utility: when used as block make it full width */
+.electric-border.block{
+  display:block;
+  width:100%;
+}
