@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from '@clerk/themes';
 import { Toaster } from "@/components/ui/sonner";
 import FaultyTerminalWrapper from "@/components/ui/Backgrounds/FaultyTerminal/FaultyTerminalWrapper.js";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -58,6 +59,9 @@ export default function RootLayout({ children }) {
               richColors
               closeButton
             />
+
+            {/* Vercel Analytics */}
+            <Analytics />
           </ThemeProvider>
         </body>
       </html>
