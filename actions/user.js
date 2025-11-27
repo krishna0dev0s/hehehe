@@ -4,24 +4,14 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { generateAIInsights } from "./dashboard";
+import { getOrCreateUser } from "@/lib/userHelper";
 
 export async function updateUser(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  // Use helper to get or create user with upsert
+  const user = await getOrCreateUser();
 
   try {
     console.log("Received data:", data); // Debug log
@@ -110,22 +100,17 @@ export async function getUserOnboardingStatus() {
   if (!userId) throw new Error("Unauthorized");
 
   try {
-    let user = await db.user.findUnique({
+    // Use upsert to get or create user atomically
+    const user = await db.user.upsert({
       where: { clerkUserId: userId },
+      update: {}, // Don't update existing users
+      create: {
+        clerkUserId: userId,
+        email: (await auth()).sessionClaims?.email || "unknown@example.com",
+        name: (await auth()).sessionClaims?.name || "User",
+      },
       select: { industry: true },
     });
-
-    // If user doesn't exist, create them
-    if (!user) {
-      user = await db.user.create({
-        data: {
-          clerkUserId: userId,
-          email: (await auth()).sessionClaims?.email || "unknown@example.com",
-          name: (await auth()).sessionClaims?.name || "User",
-        },
-        select: { industry: true },
-      });
-    }
 
     return {
       isOnboarded: !!user?.industry,

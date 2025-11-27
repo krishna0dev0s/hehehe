@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getOrCreateUser } from "@/lib/userHelper";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -11,23 +12,8 @@ export async function generateQuiz() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-    select: {
-      industry: true,
-      skills: true,
-    },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  // Use helper to get or create user
+  const user = await getOrCreateUser();
 
   const prompt = `
     Generate 10 technical interview questions for a ${
@@ -69,19 +55,7 @@ export async function saveQuizResult(questions, answers, score) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  const user = await getOrCreateUser();
 
   const questionResults = questions.map((q, index) => ({
     question: q.question,
@@ -148,19 +122,7 @@ export async function getAssessments() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  const user = await getOrCreateUser();
 
   try {
     const assessments = await db.assessment.findMany({
@@ -183,19 +145,7 @@ export async function saveInterviewAssessment(companyName, jobTitle, questions, 
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  const user = await getOrCreateUser();
 
   try {
     const questionResults = questions.map((q, idx) => ({

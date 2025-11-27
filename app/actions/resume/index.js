@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getOrCreateUser } from "@/lib/userHelper";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -12,22 +13,8 @@ export async function saveResume(content) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
     
-    let user = await db.user.findUnique({
-        where: {
-            clerkUserId: userId
-        },
-    });
-    
-    // Auto-create user if doesn't exist
-    if (!user) {
-        user = await db.user.create({
-            data: {
-                clerkUserId: userId,
-                email: (await auth()).sessionClaims?.email || "unknown@example.com",
-                name: (await auth()).sessionClaims?.name || "User",
-            },
-        });
-    }
+    // Use helper to get or create user
+    const user = await getOrCreateUser();
     
     try {
         const resume = await db.resume.upsert({
@@ -54,20 +41,7 @@ export async function getResume() {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    let user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-    });
-
-    // Auto-create user if doesn't exist
-    if (!user) {
-        user = await db.user.create({
-            data: {
-                clerkUserId: userId,
-                email: (await auth()).sessionClaims?.email || "unknown@example.com",
-                name: (await auth()).sessionClaims?.name || "User",
-            },
-        });
-    }
+    const user = await getOrCreateUser();
 
     return await db.resume.findUnique({
         where: {
@@ -80,20 +54,7 @@ export async function improveWithAI({ current, type }) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    let user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-    });
-    
-    // Auto-create user if doesn't exist
-    if (!user) {
-        user = await db.user.create({
-            data: {
-                clerkUserId: userId,
-                email: (await auth()).sessionClaims?.email || "unknown@example.com",
-                name: (await auth()).sessionClaims?.name || "User",
-            },
-        });
-    }
+    const user = await getOrCreateUser();
 
     // Get industry insights separately
     const industryInsights = user.industry ? await db.industryInsight.findUnique({

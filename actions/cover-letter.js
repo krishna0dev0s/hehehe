@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getOrCreateUser } from "@/lib/userHelper";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -11,19 +12,8 @@ export async function generateCoverLetter(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  // Use helper to get or create user
+  const user = await getOrCreateUser();
 
   const prompt = `
     Write a professional cover letter for a ${data.jobTitle} position at ${
@@ -77,19 +67,7 @@ export async function getCoverLetters() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  const user = await getOrCreateUser();
 
   return await db.coverLetter.findMany({
     where: {
@@ -105,19 +83,7 @@ export async function getCoverLetter(id) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  const user = await getOrCreateUser();
 
   return await db.coverLetter.findUnique({
     where: {
@@ -131,19 +97,7 @@ export async function deleteCoverLetter(id) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  let user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        clerkUserId: userId,
-        email: (await auth()).sessionClaims?.email || "unknown@example.com",
-        name: (await auth()).sessionClaims?.name || "User",
-      },
-    });
-  }
+  const user = await getOrCreateUser();
 
   return await db.coverLetter.delete({
     where: {

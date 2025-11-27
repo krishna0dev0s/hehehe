@@ -3,24 +3,12 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { getOrCreateUser } from "@/lib/userHelper";
 
 export async function saveResume(content) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
-    let user = await db.user.findUnique({
-        where: {
-            clerkUserId: userId
-        },
-    });
-    if (!user) {
-        user = await db.user.create({
-            data: {
-                clerkUserId: userId,
-                email: (await auth()).sessionClaims?.email || "unknown@example.com",
-                name: (await auth()).sessionClaims?.name || "User",
-            },
-        });
-    }
+    const user = await getOrCreateUser();
     try {
         const resume = await db.resume.upsert({
             where: {
