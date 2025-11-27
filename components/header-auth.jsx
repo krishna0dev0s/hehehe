@@ -16,6 +16,7 @@ import {
   GraduationCapIcon,
   LayoutDashboard,
   PenBox,
+  Settings,
   StarsIcon,
 } from "lucide-react";
 import {
@@ -85,6 +86,13 @@ export function HeaderAuth() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Clerk Account Settings */}
+        <Link href="https://dashboard.clerk.com" target="_blank" rel="noopener noreferrer">
+          <Button variant="ghost" size="sm" title="Clerk Account Settings">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </Link>
       </SignedIn>
 
       {/* Auth Buttons */}
