@@ -1,26 +1,15 @@
 'use server';
 
-import { db } from "@/lib/db";
+import { db, getOrCreateUserFromClerk } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 export async function saveResume(content) {
-    const { userId } = await auth();
+    const { userId, sessionClaims } = await auth();
     if (!userId) throw new Error("Unauthorized");
-    let user = await db.user.findUnique({
-        where: {
-            clerkUserId: userId
-        },
-    });
-    if (!user) {
-        user = await db.user.create({
-            data: {
-                clerkUserId: userId,
-                email: (await auth()).sessionClaims?.email || "unknown@example.com",
-                name: (await auth()).sessionClaims?.name || "User",
-            },
-        });
-    }
+    
+    const user = await getOrCreateUserFromClerk(userId, sessionClaims);
+    
     try {
         const resume = await db.resume.upsert({
             where: {
